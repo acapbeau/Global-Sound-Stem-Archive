@@ -1,0 +1,49 @@
+import streamlit as st
+import pandas as pd
+import os
+
+# Page Config
+st.set_page_config(page_title="Global Sound & Stem Archive (GSSA)", layout="wide")
+
+st.title("🎵 Global Sound & Stem Archive (GSSA)")
+st.markdown("### Digital Curation Repository | INFO 4730 Final Project")
+st.info("Curated by Bobo Mpeti | Project: 'Fan Club'")
+
+# Load the Metadata
+try:
+    df = pd.read_csv('metadata.csv')
+    
+    # Sidebar Filters
+    st.sidebar.header("Filter Archive")
+    search = st.sidebar.text_input("Search by Instrument or Tag")
+    
+    if search:
+        df = df[df.apply(lambda row: search.lower() in row.astype(str).str.lower().values, axis=1)]
+
+    # Main Display
+    st.write(f"Showing **{len(df)}** curated items:")
+    
+    # Create columns for a grid view
+    for index, row in df.iterrows():
+        with st.container():
+            col1, col2 = st.columns([1, 3])
+            with col1:
+                st.image("https://img.icons8.com/fluency/96/audio-wave.png") # Decorative icon
+            with col2:
+                st.subheader(row['Title'])
+                # Technical Meta Tags
+                st.markdown(f"**BPM:** `{row['BPM']}` | **Key:** `{row['Key']}` | **Format:** `{row['Format']}`")
+                st.text(f"Keywords: {row['Keywords']}")
+                
+                # Check if file exists locally to provide a player
+                if os.path.exists(row['Filename']):
+                    st.audio(row['Filename'])
+                else:
+                    st.warning("Audio file linked in metadata but not found in local path.")
+            st.divider()
+
+except FileNotFoundError:
+    st.error("metadata.csv not found! Please run the extraction script first.")
+
+# Footer
+st.caption("Developed for University of North Texas - INFO 4730 Digital Curation")
